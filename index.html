@@ -1,0 +1,257 @@
+﻿<html>
+<head>
+<style>
+	table {
+		border-collapse: collapse;
+	}
+
+	table, th, td {
+		border: 1px solid black;
+	}
+</style>
+<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
+<script>
+	var Moves= new Array();
+	
+	CanMoveTanks=true;
+	var NumberOfTanks=3;
+	var MoveIndex=0;
+	var FieldWidth=10;
+	var FieldLength=10;
+	var Tank_X_Loc= new Array();
+	var Tank_Y_Loc= new Array();
+	var Tank_Angle= new Array();
+	var TankColor= new Array();
+	
+	Tank_X_Loc[0]=Math.floor((Math.random() * FieldWidth) );
+	Tank_Y_Loc[0]=Math.floor((Math.random() * FieldLength) );
+	Tank_Angle[0]=Math.floor((Math.random() * 4) )* 90;
+	TankColor[0]="Red";
+	
+	Tank_X_Loc[1]=Math.floor((Math.random() * FieldWidth) );
+	Tank_Y_Loc[1]=Math.floor((Math.random() * FieldLength) );
+	Tank_Angle[1]=Math.floor((Math.random() * 4) )* 90;
+	TankColor[1]="Green";
+	
+	Tank_X_Loc[2]=Math.floor((Math.random() * FieldWidth) );
+	Tank_Y_Loc[2]=Math.floor((Math.random() * FieldLength) );
+	Tank_Angle[2]=Math.floor((Math.random() * 4) )* 90;
+	TankColor[2]="Blue";
+	
+	var Target_X=5;
+	var Target_Y=0;
+	function ShowTarget(){
+		jQuery("#Loc"+Target_Y+Target_X).attr("src","Images/Target.png");
+	}
+	function ShowTank(TankId){
+		PhotoName="";
+		switch(Tank_Angle[TankId]){
+			case 0:
+				PhotoName="Tank-Up.png";
+			break;
+			case 90:
+				PhotoName="Tank-Right.png";
+			break;
+			case 180:
+				PhotoName="Tank-Down.png";
+			break;
+			case 270:
+				PhotoName="Tank-Left.png";
+			break;
+		}
+		
+         jQuery("#Loc"+Tank_Y_Loc[TankId]+Tank_X_Loc[TankId]).attr("src","Images/"+TankColor[TankId]+"/"+PhotoName+"?"+ new Date().getTime());
+		
+		
+	}
+	function HideTank(TankId){
+		jQuery("#Loc"+Tank_Y_Loc[TankId]+Tank_X_Loc[TankId]).attr("src","Images/Blank.png");
+	}
+	function Initialize(){
+		DrawField(10,10);
+		ShowTarget();
+		ShowTank(0);		
+	}
+	function DrawField(x,y){
+		
+		var Result='<table>';
+		for (j=0;j<y;j++){
+			Result=Result + '<tr>';
+				for (i=0;i<x;i++){
+					Result=Result + '	<td>';					
+					Result=Result + '		<img id="Loc'+j+i+'" src="Images/Blank.png">';
+					Result=Result + '	</td>';
+				}
+			Result=Result + '<tr>';
+		}
+		Result=Result + '</table>';
+		jQuery("#BattleField").html(Result);
+		
+	}
+	function TurnLeft(TankId){
+		Tank_Angle[TankId]=Tank_Angle[TankId]-90;
+		if (Tank_Angle[TankId]==-90){
+			Tank_Angle[TankId]=270;
+		}
+		ShowTank(TankId);
+		
+	}
+	function TurnRight(TankId){
+		Tank_Angle[TankId]=Tank_Angle[TankId]+90;
+		if (Tank_Angle[TankId]==360){
+			Tank_Angle[TankId]=0;
+		}
+		ShowTank(TankId);
+		
+	}
+	function TankMoveOk(TankId){
+		X=Tank_X_Loc[TankId]
+		Y=Tank_Y_Loc[TankId]
+		CanGo=true;
+		for (i=0;i<NumberOfTanks;i++){
+			if (TankId!=i){
+				if (X==Tank_X_Loc[i] && Y==Tank_Y_Loc[i]){
+					alert("You hit another Tank");
+					CanGo=false;
+				}
+			}
+		}
+		if (CanGo){
+			if (X==Target_X && Y==Target_Y){
+				alert("You Won");
+				CanGo=false;
+			}
+		}
+		return CanGo;
+	}
+	function Move(TankId){
+		HideTank(TankId)
+		switch(Tank_Angle[TankId]){
+			case 0:
+				if (Tank_Y_Loc[TankId]>0){
+					Tank_Y_Loc[TankId]=Tank_Y_Loc[TankId]-1;
+				}
+			break;
+			case 90:
+				if (Tank_X_Loc[TankId]<FieldWidth-1){
+					Tank_X_Loc[TankId]=Tank_X_Loc[TankId]+1;
+				}
+			break;
+			case 180:
+				if (Tank_Y_Loc[TankId]<FieldLength-1){
+					Tank_Y_Loc[TankId]=Tank_Y_Loc[TankId]+1;
+				}
+			break;
+			case 270:
+				if (Tank_X_Loc[TankId]>0){
+					Tank_X_Loc[TankId]=Tank_X_Loc[TankId]-1;
+				}
+			break;
+		}
+		if (TankMoveOk(TankId)){
+			ShowTank(TankId);
+		}
+		//MoveOtherTanks();
+	}
+	function DoMove(TankId,TheMove){
+		switch(TheMove){
+			case 'Turn-Left':					
+				TurnLeft(TankId);					
+			break;
+			case 'Turn-Right':
+				TurnRight(TankId);
+			break;
+			case 'Move':
+				Move(TankId);					
+			break;
+		}
+	}
+	function Controller(TankId,Moves){
+		for(i=0;i<Moves.length;i++){
+			DoMove(TankId,Moves[i])				
+		}		
+	}
+	function GetMoves(TankId){
+		
+		Moves[0]='Turn-Left';
+		Moves[1]='Move';
+		Moves[2]='Move';
+		Moves[3]='Turn-Right';
+		//Controller(0,Moves)
+	}
+	function GetNextMoves(TankId){
+		TheMove=Moves[MoveIndex];	
+		DoMove(TankId,TheMove)
+		MoveIndex++;
+	}
+	function CalculateSteps(){
+		MoveIndex=0;
+		Moves[0]='Turn-Left';
+		Moves[1]='Move';
+		Moves[2]='Move';
+		Moves[3]='Turn-Right';
+		Moves[4]='Move';
+		Moves[5]='Move'	
+		Moves[6]='Turn-Right';
+		Moves[7]='Move';	
+	}
+	function ShowTanks(){
+		if (jQuery("#ShowTanksButton").val()=="Hide Tanks"){
+			jQuery("#ShowTanksButton").val("Show Tanks");
+			HideTank(1);
+		    HideTank(2);
+		} else {
+			jQuery("#ShowTanksButton").val("Hide Tanks");
+			ShowTank(1);
+			ShowTank(2);
+		}
+			
+			
+	}
+	function GetRandomMove(){
+		var Result;
+		TheMove=Math.floor((Math.random() * 3) );	
+		switch(TheMove){
+		case 0:
+			Result= 'Turn-Left';					
+			break;
+		case 1:
+			Result= 'Turn-Right';
+			break;
+		case 2:
+			Result= 'Move';		
+			break;
+		}
+		return Result;
+	}
+	function MoveOtherTanks(){
+		if (CanMoveTanks){
+			DoMove(1,GetRandomMove());
+			DoMove(2,GetRandomMove());
+		}
+	}
+	function AutoPilotWithMovingTanks(){
+		TheMove=Moves[MoveIndex];	
+		DoMove(0,TheMove);
+		MoveIndex++;
+		MoveOtherTanks();
+	}
+</script>
+</head>
+<body onload="Initialize()">
+	<div id="BattleField" style="float:left;">mcjjc</div>
+	<div id="Controls" style="float:left;">
+		<input id="TurnLeftButton" type="button" value="Turn Left" onclick="TurnLeft(0);">
+		<input id="MoveButton" type="button" value="Move" onclick="Move(0);">
+		<input id="TurnRightButton" type="button" value="Turn Right" onclick="TurnRight(0);">
+	<br>
+		<input type="button" value="Calculate Steps" onclick="CalculateSteps(0);">
+		<input type="button" value="Auto Pilot" onclick="GetNextMoves(0);">
+		<br>
+		<input type="button" value="Auto Pilot with Moving Tanks" onclick="AutoPilotWithMovingTanks();">
+	<br>	
+		<input id="ShowTanksButton" type="button" value="ShowTanks" onclick="ShowTanks();">
+	</div>
+	
+</body>
+</html>
